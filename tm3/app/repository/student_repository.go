@@ -11,13 +11,11 @@ import (
 	"latihan-fiber/tm3/app/model"
 )
 
-// 3d. Sentinel error disediakan di sini
 var (
 	ErrNotFound  = errors.New("data tidak ditemukan")
 	ErrDuplicate = errors.New("data sudah ada")
 )
 
-// 3a. Interface StudentRepository dengan 5 method
 type StudentRepository interface {
 	FindAll(ctx context.Context, search string, page, limit int) ([]model.Student, int, error)
 	FindByID(ctx context.Context, id int) (model.Student, error)
@@ -26,7 +24,6 @@ type StudentRepository interface {
 	Delete(ctx context.Context, id int) error
 }
 
-// 3b. Implementasi untuk PostgreSQL
 type studentPostgresRepository struct {
 	pool *pgxpool.Pool
 }
@@ -35,7 +32,6 @@ func NewStudentRepository(pool *pgxpool.Pool) StudentRepository {
 	return &studentPostgresRepository{pool: pool}
 }
 
-// 3c. Seluruh nilai menggunakan parameter query ($1, $2, dst)
 func (r *studentPostgresRepository) FindAll(ctx context.Context, search string, page, limit int) ([]model.Student, int, error) {
 	where := "WHERE 1=1"
 	args := []any{}
@@ -45,14 +41,12 @@ func (r *studentPostgresRepository) FindAll(ctx context.Context, search string, 
 		args = append(args, "%"+search+"%")
 	}
 
-	// Menghitung total data untuk paginasi (Syarat Nomor 4)
 	var total int
 	err := r.pool.QueryRow(ctx, "SELECT COUNT(*) FROM students "+where, args...).Scan(&total)
 	if err != nil {
 		return nil, 0, fmt.Errorf("gagal menghitung total data: %w", err)
 	}
 
-	// Mengambil data dengan LIMIT dan OFFSET (Syarat Nomor 4)
 	offset := (page - 1) * limit
 	sqlText := fmt.Sprintf(`
 		SELECT id, nim, name, grade, is_active, created_at 
@@ -144,7 +138,6 @@ func (r *studentPostgresRepository) Delete(ctx context.Context, id int) error {
 	return nil
 }
 
-// Mengecek error duplikat dari PostgreSQL (Kode 23505)
 func isUniqueViolation(err error) bool {
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) {
