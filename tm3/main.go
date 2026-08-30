@@ -6,8 +6,9 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"latihan-fiber/tm3/config"   
-	"latihan-fiber/tm3/database" 
+	"latihan-fiber/tm3/app/repository" 
+	"latihan-fiber/tm3/config"
+	"latihan-fiber/tm3/database"
 )
 
 func main() {
@@ -38,13 +39,17 @@ func main() {
 		})
 	})
 
+	studentRepo := repository.NewStudentRepository(pool)
+
+	studentHandler := NewStudentHandler(studentRepo)
+
 	studentsGroup := api.Group("/students", requireJSON)
-	studentsGroup.Get("/", getStudents)
-	studentsGroup.Get("/:id", getStudentByID)
-	studentsGroup.Post("/", createStudent)
-	studentsGroup.Put("/:id", updateStudent)
-	studentsGroup.Patch("/:id", patchStudent)
-	studentsGroup.Delete("/:id", deleteStudent)
+	studentsGroup.Get("/", studentHandler.getStudents)
+	studentsGroup.Get("/:id", studentHandler.getStudentByID)
+	studentsGroup.Post("/", studentHandler.createStudent)
+	studentsGroup.Put("/:id", studentHandler.updateStudent)
+	studentsGroup.Patch("/:id", studentHandler.updateStudent)
+	studentsGroup.Delete("/:id", studentHandler.deleteStudent)
 
 	port := config.GetEnv("APP_PORT", "3000")
 	log.Printf("Server berjalan di port %s...\n", port)
