@@ -1,4 +1,4 @@
-package main
+package model
 
 //1point3
 type Student struct {
