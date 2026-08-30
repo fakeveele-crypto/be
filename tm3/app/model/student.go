@@ -1,15 +1,16 @@
 package model
 
-//1point3
+import "time"
+
 type Student struct {
-	ID       int     `json:"id"`
-	NIM      string  `json:"nim"`
-	Name     string  `json:"name"`
-	Grade    float64 `json:"grade"`
-	IsActive bool    `json:"is_active"`
+	ID        int       `json:"id"`
+	Nim       string    `json:"nim"` 
+	Name      string    `json:"name"`
+	Grade     float64   `json:"grade"`
+	IsActive  bool      `json:"is_active"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
-//1point4
 type CreateStudentRequest struct {
 	NIM   string  `json:"nim"`
 	Name  string  `json:"name"`
@@ -30,7 +31,6 @@ type PatchStudentRequest struct {
 	IsActive *bool    `json:"is_active,omitempty"`
 }
 
-//1point5
 type WebResponse struct {
 	Success bool   `json:"success"`
 	Message string `json:"message"`
@@ -40,8 +40,9 @@ type WebResponse struct {
 }
 
 type Meta struct {
-	Page       int `json:"page"`
-	Limit      int `json:"limit"`
-	Total      int `json:"total"`
-	TotalPages int `json:"total_pages"`
+	Search     string `json:"search,omitempty"`
+	Page       int    `json:"page"`
+	Limit      int    `json:"limit"`
+	Total      int    `json:"total"`
+	TotalPages int    `json:"total_pages"`
 }

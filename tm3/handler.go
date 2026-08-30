@@ -39,7 +39,7 @@ func (h *StudentHandler) getStudents(c *fiber.Ctx) error {
 
 	return c.JSON(model.WebResponse{
 		Data: students,
-		Meta: &model.ListQuery{
+		Meta: &model.Meta{
 			Search: search, Page: page, Limit: limit, Total: total, TotalPages: totalPages,
 		},
 	})
