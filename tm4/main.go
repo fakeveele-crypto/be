@@ -3,10 +3,7 @@ package main
 import (
 	"context"
 	"log"
-
 	"github.com/gofiber/fiber/v2"
-
-	// Sesuaikan path import dengan nama module di go.mod milikmu
 	"latihan-fiber/tm4/app/repository"
 	"latihan-fiber/tm4/app/service"
 	"latihan-fiber/tm4/config"
