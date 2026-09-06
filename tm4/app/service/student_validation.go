@@ -9,7 +9,7 @@ import (
 
 // 1. Validasi untuk POST (Create)
 func ValidateCreateStudent(req model.Student) error {
-	if strings.TrimSpace(req.NIM) == "" {
+	if strings.TrimSpace(req.Nim) == "" {
 		return errors.New("NIM tidak boleh kosong")
 	}
 	if strings.TrimSpace(req.Name) == "" {
@@ -23,7 +23,7 @@ func ValidateCreateStudent(req model.Student) error {
 
 // 2. Validasi untuk PUT (Update)
 func ValidateUpdateStudent(req model.Student) error {
-	if strings.TrimSpace(req.NIM) == "" {
+	if strings.TrimSpace(req.Nim) == "" {
 		return errors.New("NIM wajib diisi untuk pembaruan data")
 	}
 	if strings.TrimSpace(req.Name) == "" {
@@ -39,8 +39,8 @@ func ValidateUpdateStudent(req model.Student) error {
 func ApplyPatchStudent(existing model.Student, patch model.Student) (model.Student, error) {
 	updated := existing
 
-	if strings.TrimSpace(patch.NIM) != "" {
-		updated.NIM = patch.NIM
+	if strings.TrimSpace(patch.Nim) != "" {
+		updated.Nim = patch.Nim
 	}
 	if strings.TrimSpace(patch.Name) != "" {
 		updated.Name = patch.Name
