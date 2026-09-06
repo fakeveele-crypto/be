@@ -6,18 +6,28 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/fiber/v2/middleware/requestid"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 func SetupLogger(app *fiber.App) {
-	_ = os.MkdirAll("./logs", 0755)
+	app.Use(requestid.New())
 
-	file, err := os.OpenFile("./logs/app.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		file = os.Stdout
+	fileLogger := &lumberjack.Logger{
+		Filename:   "./logs/app.log",
+		MaxSize:    10, 
+		MaxBackups: 3, 
+		MaxAge:     28, 
+		Compress:   true,
 	}
 
+	multiWriter := io.MultiWriter(os.Stdout, fileLogger)
+
+	jsonFormat := `{"time":"${time}","request_id":"${locals:requestid}","metode":"${method}","jalur":"${path}","status":${status},"durasi":"${latency}"}` + "\n"
+
 	app.Use(logger.New(logger.Config{
-		Output: io.MultiWriter(os.Stdout, file),
-		Format: "[${time}] ${status} - ${latency} ${method} ${path}\n",
+		Output:     multiWriter,
+		Format:     jsonFormat,
+		TimeFormat: "2006-01-02T15:04:05Z07:00",
 	}))
 }

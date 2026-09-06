@@ -6,3 +6,4 @@
 [20:38:29] 200 -            0s GET /
 [20:52:59] 200 -            0s GET /
 [20:52:59] 200 -            0s GET /
+{"time":"2026-09-06T21:26:36+07:00","request_id":"53fef4ad-4e9a-4bf5-bc97-673ffa7de2aa","metode":"GET","jalur":"/api/v1/students","status":200,"durasi":"     3.1376ms"}
