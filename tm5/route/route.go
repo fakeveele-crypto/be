@@ -34,6 +34,7 @@ func SetupRoutes(app *fiber.App, studentService *service.StudentService, authSer
 
 	authGroup := api.Group("/auth")
 	authGroup.Post("/register", authService.Register)
+	authGroup.Post("/login", authService.Login)
 
 	studentsGroup := api.Group("/students", middleware.RequireJSON)
 	studentsGroup.Get("/", studentService.GetStudents)

@@ -3,12 +3,14 @@ package main
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"latihan-fiber/tm5/app/repository"
 	"latihan-fiber/tm5/app/service"
 	"latihan-fiber/tm5/config"
 	"latihan-fiber/tm5/database"
+	"latihan-fiber/tm5/helper"
 	"latihan-fiber/tm5/route"
 )
 
@@ -28,7 +30,15 @@ func main() {
 	studentService := service.NewStudentService(studentRepo)
 
 	userRepo := repository.NewUserRepository(pool)
-	authService := service.NewAuthService(userRepo)
+	tokenRepo := repository.NewTokenRepository(pool)
+
+	jwtManager := helper.NewJWTManager(
+		config.GetEnv("JWT_SECRET", ""),
+		config.GetEnv("JWT_ISSUER", "praktikum-backend"),
+		15*time.Minute,
+	)
+
+	authService := service.NewAuthService(userRepo, tokenRepo, jwtManager, 7*24*time.Hour)
 
 	// 4. Inisialisasi Fiber & Logger
 	app := fiber.New(config.NewFiberConfig())
