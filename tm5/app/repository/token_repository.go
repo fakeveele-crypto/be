@@ -14,6 +14,7 @@ type TokenRepository interface {
 	Save(ctx context.Context, t model.RefreshToken) error
 	FindActive(ctx context.Context, tokenHash string) (model.RefreshToken, error)
 	Revoke(ctx context.Context, tokenHash string) error
+	RevokeAllForUser(ctx context.Context, userID int) error
 }
 
 type tokenPostgresRepository struct {
@@ -60,6 +61,19 @@ func (r *tokenPostgresRepository) Revoke(ctx context.Context, tokenHash string) 
 	)
 	if err != nil {
 		return fmt.Errorf("mencabut refresh token: %w", err)
+	}
+	return nil
+}
+
+// RevokeAllForUser dipakai ketika terdeteksi penyalahgunaan token (refresh
+// token yang sudah dirotasi dipakai lagi) atau ketika password diganti.
+func (r *tokenPostgresRepository) RevokeAllForUser(ctx context.Context, userID int) error {
+	_, err := r.pool.Exec(ctx,
+		`UPDATE refresh_tokens SET revoked_at = NOW()
+		 WHERE user_id = $1 AND revoked_at IS NULL`, userID,
+	)
+	if err != nil {
+		return fmt.Errorf("mencabut seluruh refresh token user: %w", err)
 	}
 	return nil
 }

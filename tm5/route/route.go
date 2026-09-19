@@ -7,10 +7,11 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"latihan-fiber/tm5/app/service"
+	"latihan-fiber/tm5/helper"
 	"latihan-fiber/tm5/middleware"
 )
 
-func SetupRoutes(app *fiber.App, studentService *service.StudentService, authService *service.AuthService, pool *pgxpool.Pool) {
+func SetupRoutes(app *fiber.App, studentService *service.StudentService, authService *service.AuthService, jwtManager *helper.JWTManager, pool *pgxpool.Pool) {
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Hello World")
 	})
@@ -32,11 +33,15 @@ func SetupRoutes(app *fiber.App, studentService *service.StudentService, authSer
 		})
 	})
 
-	authGroup := api.Group("/auth")
+	authGroup := api.Group("/auth", middleware.RequireJSON)
 	authGroup.Post("/register", authService.Register)
-	authGroup.Post("/login", authService.Login)
+	authGroup.Post("/login", middleware.LoginRateLimiter(), authService.Login)
+	authGroup.Post("/refresh", authService.Refresh)
+	authGroup.Post("/logout", authService.Logout)
+	authGroup.Get("/me", middleware.RequireAuth(jwtManager), authService.Me)
 
-	studentsGroup := api.Group("/students", middleware.RequireJSON)
+	// Seluruh endpoint students wajib membawa access token yang sah.
+	studentsGroup := api.Group("/students", middleware.RequireJSON, middleware.RequireAuth(jwtManager))
 	studentsGroup.Get("/", studentService.GetStudents)
 	studentsGroup.Get("/:id", studentService.GetStudentByID)
 	studentsGroup.Post("/", studentService.CreateStudent)

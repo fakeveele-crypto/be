@@ -32,20 +32,26 @@ func main() {
 	userRepo := repository.NewUserRepository(pool)
 	tokenRepo := repository.NewTokenRepository(pool)
 
+	jwtSecret := config.GetEnv("JWT_SECRET", "")
+	if len(jwtSecret) < 32 {
+		log.Fatal("JWT_SECRET tidak diisi atau terlalu pendek (minimal 32 karakter)")
+	}
+
 	jwtManager := helper.NewJWTManager(
-		config.GetEnv("JWT_SECRET", ""),
+		jwtSecret,
 		config.GetEnv("JWT_ISSUER", "praktikum-backend"),
-		15*time.Minute,
+		time.Duration(config.GetEnvInt("JWT_ACCESS_TTL_MINUTES", 15))*time.Minute,
 	)
 
-	authService := service.NewAuthService(userRepo, tokenRepo, jwtManager, 7*24*time.Hour)
+	refreshTTL := time.Duration(config.GetEnvInt("JWT_REFRESH_TTL_DAYS", 7)) * 24 * time.Hour
+	authService := service.NewAuthService(userRepo, tokenRepo, jwtManager, refreshTTL)
 
 	// 4. Inisialisasi Fiber & Logger
 	app := fiber.New(config.NewFiberConfig())
 	config.SetupLogger(app)
 
 	// 5. Daftarkan Routes
-	route.SetupRoutes(app, studentService, authService, pool)
+	route.SetupRoutes(app, studentService, authService, jwtManager, pool)
 
 	// 6. Jalankan Server
 	port := config.GetEnv("APP_PORT", "3000")
