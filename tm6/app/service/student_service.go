@@ -42,6 +42,7 @@ func (s *StudentService) GetStudents(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(model.WebResponse{
+		Success: true,
 		Data: students,
 		Meta: &model.Meta{
 			Search: search, Page: page, Limit: limit, Total: total, TotalPages: totalPages,
@@ -69,7 +70,7 @@ func (s *StudentService) GetStudentByID(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "tidak berhak mengakses data ini"})
 	}
 
-	return c.JSON(model.WebResponse{Data: student})
+	return c.JSON(model.WebResponse{Success: true, Data: student})
 }
 
 // 3. CreateStudent 
@@ -90,7 +91,7 @@ func (s *StudentService) CreateStudent(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(model.WebResponse{Data: student})
+	return c.Status(fiber.StatusCreated).JSON(model.WebResponse{Success: true,Data: student})
 }
 
 // 4. UpdateStudent 
@@ -130,7 +131,7 @@ func (s *StudentService) UpdateStudent(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	return c.JSON(model.WebResponse{Data: student})
+	return c.JSON(model.WebResponse{Success: true,Data: student})
 }
 
 // 5. DeleteStudent 

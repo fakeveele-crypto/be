@@ -33,6 +33,8 @@ func RequireAuth(jwtManager *helper.JWTManager) fiber.Handler {
 		}
 
 		c.Locals(helper.LocalsAuthUser, authUser)
+		c.Locals("user_id", authUser.UserID)
+		c.Locals("role", authUser.Role)
 		return c.Next()
 	}
 }

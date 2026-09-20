@@ -23,7 +23,7 @@ func SetupLogger(app *fiber.App) {
 
 	multiWriter := io.MultiWriter(os.Stdout, fileLogger)
 
-	jsonFormat := `{"time":"${time}","request_id":"${locals:requestid}","metode":"${method}","jalur":"${path}","status":${status},"durasi":"${latency}"}` + "\n"
+	jsonFormat := `{"time":"${time}","request_id":"${locals:requestid}","metode":"${method}","jalur":"${path}","status":${status},"durasi":"${latency}","user_id":"${locals:user_id}","role":"${locals:role}"}` + "\n"
 
 	app.Use(logger.New(logger.Config{
 		Output:     multiWriter,
