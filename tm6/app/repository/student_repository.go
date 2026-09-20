@@ -49,8 +49,8 @@ func (r *studentPostgresRepository) FindAll(ctx context.Context, search string, 
 
 	offset := (page - 1) * limit
 	sqlText := fmt.Sprintf(`
-		SELECT id, nim, name, grade, is_active, created_at 
-		FROM students %s 
+		SELECT id, nim, name, grade, is_active, owner_id, created_at 
+		FROM students %s
 		ORDER BY id ASC 
 		LIMIT $%d OFFSET $%d`, where, len(args)+1, len(args)+2)
 	
@@ -65,7 +65,7 @@ func (r *studentPostgresRepository) FindAll(ctx context.Context, search string, 
 	hasil := []model.Student{}
 	for rows.Next() {
 		var s model.Student
-		if err := rows.Scan(&s.ID, &s.Nim, &s.Name, &s.Grade, &s.IsActive, &s.CreatedAt); err != nil {
+		if err := rows.Scan(&s.ID, &s.Nim, &s.Name, &s.Grade, &s.IsActive, &s.OwnerID, &s.CreatedAt); err != nil {
 			return nil, 0, fmt.Errorf("gagal membaca baris: %w", err)
 		}
 		hasil = append(hasil, s)
@@ -76,9 +76,9 @@ func (r *studentPostgresRepository) FindAll(ctx context.Context, search string, 
 func (r *studentPostgresRepository) FindByID(ctx context.Context, id int) (model.Student, error) {
 	var s model.Student
 	err := r.pool.QueryRow(ctx, `
-		SELECT id, nim, name, grade, is_active, created_at 
+		SELECT id, nim, name, grade, is_active, owner_id, created_at 
 		FROM students WHERE id = $1`, id).
-		Scan(&s.ID, &s.Nim, &s.Name, &s.Grade, &s.IsActive, &s.CreatedAt)
+		Scan(&s.ID, &s.Nim, &s.Name, &s.Grade, &s.IsActive, &s.OwnerID, &s.CreatedAt)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -91,10 +91,10 @@ func (r *studentPostgresRepository) FindByID(ctx context.Context, id int) (model
 
 func (r *studentPostgresRepository) Create(ctx context.Context, s model.Student) (model.Student, error) {
 	err := r.pool.QueryRow(ctx, `
-		INSERT INTO students (nim, name, grade, is_active) 
-		VALUES ($1, $2, $3, $4) 
+		INSERT INTO students (nim, name, grade, is_active, owner_id) 
+		VALUES ($1, $2, $3, $4, $5) 
 		RETURNING id, created_at`, 
-		s.Nim, s.Name, s.Grade, s.IsActive).
+		s.Nim, s.Name, s.Grade, s.IsActive, s.OwnerID).
 		Scan(&s.ID, &s.CreatedAt)
 
 	if err != nil {

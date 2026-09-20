@@ -64,6 +64,11 @@ func (s *StudentService) GetStudentByID(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
+	current, _ := helper.CurrentUser(c)
+	if !CanAccessStudent(current, student.OwnerID, s.perms, "student:read:any") {
+		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "tidak berhak mengakses data ini"})
+	}
+
 	return c.JSON(model.WebResponse{Data: student})
 }
 
@@ -73,6 +78,9 @@ func (s *StudentService) CreateStudent(c *fiber.Ctx) error {
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Format data tidak valid"})
 	}
+
+	current, _ := helper.CurrentUser(c)
+	req.OwnerID = current.UserID
 
 	student, err := s.repo.Create(c.UserContext(), req)
 	if err != nil {
@@ -97,6 +105,19 @@ func (s *StudentService) UpdateStudent(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Format data tidak valid"})
 	}
 	req.ID = id
+
+	existing, err := s.repo.FindByID(c.UserContext(), id)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": err.Error()})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	current, _ := helper.CurrentUser(c)
+	if !CanAccessStudent(current, existing.OwnerID, s.perms, "student:update:any") {
+		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "tidak berhak mengubah data ini"})
+	}
 
 	student, err := s.repo.Update(c.UserContext(), req)
 	if err != nil {
