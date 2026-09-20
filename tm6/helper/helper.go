@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
-	"latihan-fiber/tm5/app/model"
+	"latihan-fiber/tm6/app/model"
 )
 
 func ok(c *fiber.Ctx, message string, data any, meta *model.Meta) error {

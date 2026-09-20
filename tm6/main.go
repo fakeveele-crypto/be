@@ -6,12 +6,12 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"latihan-fiber/tm5/app/repository"
-	"latihan-fiber/tm5/app/service"
-	"latihan-fiber/tm5/config"
-	"latihan-fiber/tm5/database"
-	"latihan-fiber/tm5/helper"
-	"latihan-fiber/tm5/route"
+	"latihan-fiber/tm6/app/repository"
+	"latihan-fiber/tm6/app/service"
+	"latihan-fiber/tm6/config"
+	"latihan-fiber/tm6/database"
+	"latihan-fiber/tm6/helper"
+	"latihan-fiber/tm6/route"
 )
 
 func main() {
@@ -27,7 +27,6 @@ func main() {
 
 	// 3. Inject Repository & Service
 	studentRepo := repository.NewStudentRepository(pool)
-	studentService := service.NewStudentService(studentRepo)
 
 	userRepo := repository.NewUserRepository(pool)
 	tokenRepo := repository.NewTokenRepository(pool)
@@ -43,6 +42,20 @@ func main() {
 		time.Duration(config.GetEnvInt("JWT_ACCESS_TTL_MINUTES", 15))*time.Minute,
 	)
 
+	roleRepository := repository.NewRoleRepository(pool)
+
+	// Pemetaan role ke permission dibaca SEKALI saat aplikasi menyala.
+	// Konsekuensinya: perubahan hak akses di database baru berlaku setelah
+	// aplikasi dijalankan ulang. Ini keputusan sadar, bukan kelalaian.
+	rawPermissions, err := roleRepository.LoadPermissions(context.Background())
+	if err != nil {
+		log.Fatalf("gagal memuat permission: %v", err)
+	}
+	permissions := helper.NewPermissionSet(rawPermissions)
+	log.Printf("permission dimuat untuk role: %v\n", permissions.KnownRoles())
+
+	studentService := service.NewStudentService(studentRepo, permissions)
+
 	refreshTTL := time.Duration(config.GetEnvInt("JWT_REFRESH_TTL_DAYS", 7)) * 24 * time.Hour
 	authService := service.NewAuthService(userRepo, tokenRepo, jwtManager, refreshTTL)
 
@@ -51,7 +64,7 @@ func main() {
 	config.SetupLogger(app)
 
 	// 5. Daftarkan Routes
-	route.SetupRoutes(app, studentService, authService, jwtManager, pool)
+	route.SetupRoutes(app, studentService, authService, jwtManager, permissions, pool)
 
 	// 6. Jalankan Server
 	port := config.GetEnv("APP_PORT", "3000")

@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"latihan-fiber/tm5/app/model"
+	"latihan-fiber/tm6/app/model"
 )
 
 var (

@@ -6,9 +6,9 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"latihan-fiber/tm5/app/service"
-	"latihan-fiber/tm5/helper"
-	"latihan-fiber/tm5/middleware"
+	"latihan-fiber/tm6/app/service"
+	"latihan-fiber/tm6/helper"
+	"latihan-fiber/tm6/middleware"
 )
 
 func SetupRoutes(app *fiber.App, studentService *service.StudentService, authService *service.AuthService, jwtManager *helper.JWTManager, pool *pgxpool.Pool) {

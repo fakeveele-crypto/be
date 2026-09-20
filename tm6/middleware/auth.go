@@ -7,7 +7,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
-	"latihan-fiber/tm5/helper"
+	"latihan-fiber/tm6/helper"
 )
 
 // RequireAuth memeriksa access token pada header Authorization.

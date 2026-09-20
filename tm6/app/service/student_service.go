@@ -5,16 +5,18 @@ import (
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
-	"latihan-fiber/tm5/app/model"
-	"latihan-fiber/tm5/app/repository"
+	"latihan-fiber/tm6/app/model"
+	"latihan-fiber/tm6/app/repository"
+	"latihan-fiber/tm6/helper"
 )
 
 type StudentService struct {
-	repo repository.StudentRepository
+	repo  repository.StudentRepository
+	perms *helper.PermissionSet
 }
 
-func NewStudentService(repo repository.StudentRepository) *StudentService {
-	return &StudentService{repo: repo}
+func NewStudentService(repo repository.StudentRepository, perms *helper.PermissionSet) *StudentService {
+	return &StudentService{repo: repo, perms: perms}
 }
 
 // 1. GetStudents 

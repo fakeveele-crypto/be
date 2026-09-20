@@ -4,7 +4,7 @@ import (
 	"strings"
 	"unicode"
 
-	"latihan-fiber/tm5/app/model"
+	"latihan-fiber/tm6/app/model"
 )
 
 const minPasswordLength = 8

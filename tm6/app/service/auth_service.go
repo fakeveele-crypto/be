@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"latihan-fiber/tm5/app/model"
-	"latihan-fiber/tm5/app/repository"
-	"latihan-fiber/tm5/helper"
+	"latihan-fiber/tm6/app/model"
+	"latihan-fiber/tm6/app/repository"
+	"latihan-fiber/tm6/helper"
 )
 
 const refreshTokenBytes = 32

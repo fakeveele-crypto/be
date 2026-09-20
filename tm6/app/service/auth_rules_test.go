@@ -3,7 +3,7 @@ package service
 import (
 	"testing"
 
-	"latihan-fiber/tm5/app/model"
+	"latihan-fiber/tm6/app/model"
 )
 
 func TestValidateRegister_PasswordTerlaluPendek(t *testing.T) {

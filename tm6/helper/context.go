@@ -2,7 +2,7 @@ package helper
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"latihan-fiber/tm5/app/model"
+	"latihan-fiber/tm6/app/model"
 )
 
 // LocalsAuthUser adalah kunci penyimpanan identitas pemakai di context request.

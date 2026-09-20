@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strings"
 
-	"latihan-fiber/tm5/app/model"
+	"latihan-fiber/tm6/app/model"
 )
 
 // 1. Validasi untuk POST (Create)

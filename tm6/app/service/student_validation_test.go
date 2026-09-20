@@ -3,7 +3,7 @@ package service
 import (
 	"testing"
 
-	"latihan-fiber/tm5/app/model"
+	"latihan-fiber/tm6/app/model"
 )
 
 // Test 1: Validasi POST (Create)
