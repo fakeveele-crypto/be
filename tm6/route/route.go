@@ -11,7 +11,14 @@ import (
 	"latihan-fiber/tm6/middleware"
 )
 
-func SetupRoutes(app *fiber.App, studentService *service.StudentService, authService *service.AuthService, jwtManager *helper.JWTManager, pool *pgxpool.Pool) {
+func SetupRoutes(
+	app *fiber.App,
+	studentService *service.StudentService,
+	authService *service.AuthService,
+	jwtManager *helper.JWTManager,
+	perms *helper.PermissionSet,
+	pool *pgxpool.Pool,
+) {
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Hello World")
 	})
@@ -42,10 +49,16 @@ func SetupRoutes(app *fiber.App, studentService *service.StudentService, authSer
 
 	// Seluruh endpoint students wajib membawa access token yang sah.
 	studentsGroup := api.Group("/students", middleware.RequireJSON, middleware.RequireAuth(jwtManager))
-	studentsGroup.Get("/", studentService.GetStudents)
+
+	// Hak-hak berikut dapat diputuskan TANPA melihat isi data, sehingga
+	// cukup diperiksa di sini, sebelum masuk ke service.
+	studentsGroup.Get("/", middleware.RequirePermission(perms, "student:list"), studentService.GetStudents)
+	studentsGroup.Post("/", middleware.RequirePermission(perms, "student:create"), studentService.CreateStudent)
+	studentsGroup.Delete("/:id", middleware.RequirePermission(perms, "student:delete"), studentService.DeleteStudent)
+
+	// Hak-hak berikut BERGANTUNG pada siapa pemilik datanya, sehingga
+	// pemeriksaannya dilakukan di dalam service, bukan di sini.
 	studentsGroup.Get("/:id", studentService.GetStudentByID)
-	studentsGroup.Post("/", studentService.CreateStudent)
 	studentsGroup.Put("/:id", studentService.UpdateStudent)
 	studentsGroup.Patch("/:id", studentService.UpdateStudent)
-	studentsGroup.Delete("/:id", studentService.DeleteStudent)
 }
