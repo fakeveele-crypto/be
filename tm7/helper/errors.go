@@ -30,11 +30,11 @@ const (
 // menggambarkan apa yang salah; urusan menuliskannya sebagai response
 // diserahkan sepenuhnya kepada ErrorHandler terpusat.
 type AppError struct {
-	Status  int               // status HTTP yang akan dikirim
-	Code    string            // kode stabil untuk client
-	Message string            // penjelasan untuk manusia
-	Fields  map[string]string // detail per-field, khusus kegagalan validasi
-	cause   error             // error asli, untuk log — tidak pernah dikirim
+	Status  int
+	Code    string
+	Message string
+	Fields  map[string]string
+	cause   error
 }
 
 func (e *AppError) Error() string {
@@ -44,9 +44,9 @@ func (e *AppError) Error() string {
 	return fmt.Sprintf("%s: %s", e.Code, e.Message)
 }
 
-// Unwrap membuat errors.Is dan errors.As tetap dapat menembus AppError
-// untuk menemukan error asli di bawahnya.
 func (e *AppError) Unwrap() error { return e.cause }
+
+func (e *AppError) Cause() error { return e.cause }
 
 func BadRequest(message string) *AppError {
 	return &AppError{Status: fiber.StatusBadRequest, Code: CodeBadRequest, Message: message}
@@ -81,9 +81,6 @@ func NotAcceptable(message string) *AppError {
 	}
 }
 
-// Internal sengaja memakai pesan yang seragam dan tidak informatif.
-// Detail teknisnya disimpan pada cause dan hanya muncul di log, karena
-// pesan error database sering membocorkan nama tabel dan struktur query.
 func Internal(cause error) *AppError {
 	return &AppError{
 		Status: fiber.StatusInternalServerError, Code: CodeInternal,

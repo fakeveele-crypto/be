@@ -12,6 +12,7 @@ import (
 	"latihan-fiber/tm7/database"
 	"latihan-fiber/tm7/helper"
 	"latihan-fiber/tm7/route"
+	"github.com/gofiber/fiber/v2/middleware/requestid"
 )
 
 func main() {
@@ -60,8 +61,9 @@ func main() {
 	authService := service.NewAuthService(userRepo, tokenRepo, jwtManager, refreshTTL)
 
 	// 4. Inisialisasi Fiber & Logger
-	app := fiber.New(config.NewFiberConfig())
-	config.SetupLogger(app)
+	logger := config.NewLogger()
+	app := fiber.New(config.NewFiberConfig(logger))
+	app.Use(requestid.New())
 
 	// 5. Daftarkan Routes
 	route.SetupRoutes(app, studentService, authService, jwtManager, permissions, pool)

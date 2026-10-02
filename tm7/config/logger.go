@@ -2,32 +2,28 @@ package config
 
 import (
 	"io"
+	"log/slog"
 	"os"
 
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/logger"
-	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
-func SetupLogger(app *fiber.App) {
-	app.Use(requestid.New())
-
+// NewLogger membuat satu *slog.Logger untuk seluruh aplikasi, menulis
+// JSON ke layar sekaligus ke berkas yang dirotasi otomatis.
+func NewLogger() *slog.Logger {
 	fileLogger := &lumberjack.Logger{
 		Filename:   "./logs/app.log",
-		MaxSize:    10, 
-		MaxBackups: 3, 
-		MaxAge:     28, 
+		MaxSize:    10,
+		MaxBackups: 3,
+		MaxAge:     28,
 		Compress:   true,
 	}
 
 	multiWriter := io.MultiWriter(os.Stdout, fileLogger)
 
-	jsonFormat := `{"time":"${time}","request_id":"${locals:requestid}","metode":"${method}","jalur":"${path}","status":${status},"durasi":"${latency}","user_id":"${locals:user_id}","role":"${locals:role}"}` + "\n"
+	handler := slog.NewJSONHandler(multiWriter, &slog.HandlerOptions{
+		Level: slog.LevelInfo,
+	})
 
-	app.Use(logger.New(logger.Config{
-		Output:     multiWriter,
-		Format:     jsonFormat,
-		TimeFormat: "2006-01-02T15:04:05Z07:00",
-	}))
+	return slog.New(handler)
 }

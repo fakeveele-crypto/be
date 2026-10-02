@@ -57,3 +57,8 @@ func requireJSON(c *fiber.Ctx) error {
 	}
 	return c.Next()
 }
+
+func RequestID(c *fiber.Ctx) string {
+	id, _ := c.Locals("requestid").(string)
+	return id
+}
