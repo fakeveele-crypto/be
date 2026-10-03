@@ -13,9 +13,9 @@ type User struct {
 }
 
 type RegisterRequest struct {
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Username string `json:"username" validate:"required,min=3,max=30,username"`
+	Email    string `json:"email"    validate:"required,email,max=120"`
+	Password string `json:"password" validate:"required,max=72,strongpassword"`
 }
 
 type LoginRequest struct {
@@ -56,4 +56,22 @@ type ErrorResponse struct {
 	Message   string            `json:"message"`
 	Fields    map[string]string `json:"fields,omitempty"`
 	RequestID string            `json:"request_id,omitempty"`
+}
+
+type CreateUserRequest struct {
+	Username string `json:"username" validate:"required,min=3,max=30,alphanum"`
+	Email    string `json:"email"    validate:"required,email,max=120"`
+	Password string `json:"password" validate:"required,min=8,max=72,nospace"`
+}
+
+type ReplaceUserRequest struct {
+	Username string `json:"username" validate:"required,min=3,max=30,alphanum"`
+	Email    string `json:"email"    validate:"required,email,max=120"`
+	IsActive bool   `json:"is_active"`
+}
+
+type PatchUserRequest struct {
+	Username *string  `json:"username,omitempty" validate:"omitnil,min=3,max=30,alphanum"`
+	Email    *string `json:"email,omitempty"     validate:"omitnil,email,max=120"`
+	IsActive *bool   `json:"is_active,omitempty"`
 }
