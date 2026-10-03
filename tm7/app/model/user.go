@@ -75,3 +75,21 @@ type PatchUserRequest struct {
 	Email    *string `json:"email,omitempty"     validate:"omitnil,email,max=120"`
 	IsActive *bool   `json:"is_active,omitempty"`
 }
+
+type Cursor struct {
+	CreatedAt time.Time
+	ID        int
+}
+
+type CursorQuery struct {
+	Search   string
+	IsActive *bool
+	After    *Cursor
+	Limit    int
+}
+
+type CursorMeta struct {
+	Limit      int    `json:"limit"`
+	NextCursor string `json:"next_cursor,omitempty"`
+	HasMore    bool   `json:"has_more"`
+}

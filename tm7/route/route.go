@@ -64,5 +64,6 @@ func SetupRoutes(
 	studentsGroup.Patch("/:id", studentService.UpdateStudent)
 
 	usersGroup := api.Group("/users", middleware.RequireJSON, middleware.RequireAuth(jwtManager))
+	usersGroup.Get("/", middleware.RequirePermission(perms, "user:list"), userService.List)
 	usersGroup.Get("/:id", userService.Get)
 }

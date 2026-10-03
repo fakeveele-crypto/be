@@ -26,8 +26,15 @@ func ParamID(c *fiber.Ctx) (int, bool) {
 	return id, true
 }
 
-// RequestContext memberi batas waktu pada setiap operasi basis data,
-// agar query yang menggantung tidak menahan koneksi selamanya.
 func RequestContext(c *fiber.Ctx) (context.Context, context.CancelFunc) {
 	return context.WithTimeout(c.UserContext(), 5*time.Second)
+}
+
+func SuccessCursor(c *fiber.Ctx, message string, data any, meta *model.CursorMeta) error {
+	return c.Status(fiber.StatusOK).JSON(struct {
+		Success bool               `json:"success"`
+		Message string             `json:"message"`
+		Data    any                `json:"data"`
+		Meta    *model.CursorMeta  `json:"meta"`
+	}{true, message, data, meta})
 }
