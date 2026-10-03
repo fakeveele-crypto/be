@@ -15,6 +15,7 @@ func SetupRoutes(
 	app *fiber.App,
 	studentService *service.StudentService,
 	authService *service.AuthService,
+	userService *service.UserService,
 	jwtManager *helper.JWTManager,
 	perms *helper.PermissionSet,
 	pool *pgxpool.Pool,
@@ -61,4 +62,7 @@ func SetupRoutes(
 	studentsGroup.Get("/:id", studentService.GetStudentByID)
 	studentsGroup.Put("/:id", studentService.UpdateStudent)
 	studentsGroup.Patch("/:id", studentService.UpdateStudent)
+
+	usersGroup := api.Group("/users", middleware.RequireJSON, middleware.RequireAuth(jwtManager))
+	usersGroup.Get("/:id", userService.Get)
 }

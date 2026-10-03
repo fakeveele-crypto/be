@@ -57,6 +57,7 @@ func main() {
 	log.Printf("permission dimuat untuk role: %v\n", permissions.KnownRoles())
 
 	studentService := service.NewStudentService(studentRepo, permissions)
+	userService := service.NewUserService(userRepo, permissions)
 
 	refreshTTL := time.Duration(config.GetEnvInt("JWT_REFRESH_TTL_DAYS", 7)) * 24 * time.Hour
 	authService := service.NewAuthService(userRepo, tokenRepo, jwtManager, refreshTTL)
@@ -68,7 +69,7 @@ func main() {
 	app.Use(middleware.RequestLogger(logger))
 
 	// 5. Daftarkan Routes
-	route.SetupRoutes(app, studentService, authService, jwtManager, permissions, pool)
+	route.SetupRoutes(app, studentService, authService, userService, jwtManager, permissions, pool)
 
 	// 6. Jalankan Server
 	port := config.GetEnv("APP_PORT", "3000")
