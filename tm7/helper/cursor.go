@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gofiber/fiber/v2"
 	"latihan-fiber/tm7/app/model"
 )
 
@@ -45,4 +46,35 @@ func DecodeCursor(encoded string) (model.Cursor, error) {
 	}
 
 	return model.Cursor{CreatedAt: time.Unix(0, nanos).UTC(), ID: id}, nil
+}
+
+func ParseCursorQuery(c *fiber.Ctx) (model.CursorQuery, error) {
+	limit, _ := strconv.Atoi(c.Query("limit", "10"))
+	if limit < 1 {
+		limit = 10
+	}
+	if limit > 100 {
+		limit = 100
+	}
+
+	q := model.CursorQuery{
+		Search: c.Query("search"),
+		Limit:  limit,
+	}
+
+	if raw := c.Query("is_active"); raw != "" {
+		if v, err := strconv.ParseBool(raw); err == nil {
+			q.IsActive = &v
+		}
+	}
+
+	if raw := c.Query("cursor"); raw != "" {
+		after, err := DecodeCursor(raw)
+		if err != nil {
+			return model.CursorQuery{}, BadRequest("cursor tidak valid")
+		}
+		q.After = &after
+	}
+
+	return q, nil
 }
