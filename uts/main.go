@@ -3,11 +3,15 @@ package main
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"latihan-fiber/uts/app/repository"
+	"latihan-fiber/uts/app/service"
 	"latihan-fiber/uts/config"
 	"latihan-fiber/uts/database"
 	"latihan-fiber/uts/helper"
+	"latihan-fiber/uts/route"
 )
 
 func main() {
@@ -19,22 +23,20 @@ func main() {
 	}
 	defer pool.Close()
 
+	// pengaturan JWT dari file .env
+	secret := config.GetEnv("JWT_SECRET", "")
+	if secret == "" {
+		log.Fatal("JWT_SECRET belum diisi di .env")
+	}
+	ttl := time.Duration(config.GetEnvInt("JWT_ACCESS_TTL_MINUTES", 60)) * time.Minute
+	jwtManager := helper.NewJWTManager(secret, config.GetEnv("JWT_ISSUER", "siakad-mini"), ttl)
+
+	// rangkai: repository -> service
+	userRepo := repository.NewUserRepository(pool)
+	authService := service.NewAuthService(userRepo, jwtManager)
+
 	app := fiber.New(config.NewFiberConfig())
-
-	// endpoint sementara untuk ngecek server dan database
-	app.Get("/api/v1/health", func(c *fiber.Ctx) error {
-		if err := pool.Ping(context.Background()); err != nil {
-			return helper.Fail(c, 503, "database tidak dapat dihubungi", nil)
-		}
-		return helper.Ok(c, "server dan database berjalan", nil, nil)
-	})
-
-	// SEMENTARA, untuk ngecek bentuk error 422. Hapus setelah dites.
-	app.Get("/api/v1/tes-error", func(c *fiber.Ctx) error {
-		return helper.Fail(c, 422, "Validasi gagal", map[string][]string{
-			"nim": {"NIM sudah terdaftar"},
-		})
-	})
+	route.SetupRoutes(app, authService, jwtManager, pool)
 
 	port := config.GetEnv("APP_PORT", "3000")
 	log.Fatal(app.Listen(":" + port))
