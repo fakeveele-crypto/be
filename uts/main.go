@@ -34,9 +34,11 @@ func main() {
 	// rangkai: repository -> service
 	userRepo := repository.NewUserRepository(pool)
 	authService := service.NewAuthService(userRepo, jwtManager)
+	courseRepo := repository.NewCourseRepository(pool)
+	courseService := service.NewCourseService(courseRepo)
 
 	app := fiber.New(config.NewFiberConfig())
-	route.SetupRoutes(app, authService, jwtManager, pool)
+	route.SetupRoutes(app, authService, courseService, jwtManager, pool)
 
 	port := config.GetEnv("APP_PORT", "3000")
 	log.Fatal(app.Listen(":" + port))

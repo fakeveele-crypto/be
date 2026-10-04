@@ -10,7 +10,7 @@ import (
 	"latihan-fiber/uts/middleware"
 )
 
-func SetupRoutes(app *fiber.App, authService *service.AuthService, jwtManager *helper.JWTManager, pool *pgxpool.Pool) {
+func SetupRoutes(app *fiber.App, authService *service.AuthService, courseService *service.CourseService, jwtManager *helper.JWTManager, pool *pgxpool.Pool) {
 	api := app.Group("/api/v1")
 
 	// endpoint sementara untuk ngecek server dan database
@@ -25,4 +25,7 @@ func SetupRoutes(app *fiber.App, authService *service.AuthService, jwtManager *h
 	authGroup := api.Group("/auth")
 	authGroup.Post("/login", middleware.LoginRateLimiter(), authService.Login)
 	authGroup.Get("/me", middleware.RequireAuth(jwtManager), authService.Me)
+
+	// mata kuliah, boleh dibuka semua role yang sudah login
+	api.Get("/courses", middleware.RequireAuth(jwtManager), courseService.GetCourses)
 }
