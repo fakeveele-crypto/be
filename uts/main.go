@@ -38,9 +38,11 @@ func main() {
 	courseService := service.NewCourseService(courseRepo)
 	studentRepo := repository.NewStudentRepository(pool)
 	studentService := service.NewStudentService(studentRepo)
+	enrollmentRepo := repository.NewEnrollmentRepository(pool)
+	enrollmentService := service.NewEnrollmentService(enrollmentRepo)
 
 	app := fiber.New(config.NewFiberConfig())
-	route.SetupRoutes(app, authService, courseService, studentService, jwtManager, pool)
+	route.SetupRoutes(app, authService, courseService, studentService, enrollmentService, jwtManager, pool)
 
 	port := config.GetEnv("APP_PORT", "3000")
 	log.Fatal(app.Listen(":" + port))
