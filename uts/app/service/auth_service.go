@@ -47,7 +47,6 @@ func (s *AuthService) Login(c *fiber.Ctx) error {
 	if !helper.VerifyPassword(user.Password, req.Password) {
 		return helper.Fail(c, fiber.StatusUnauthorized, "Email atau password salah", nil)
 	}
-
 	// 4. buat access token
 	token, err := s.jwt.GenerateAccess(user)
 	if err != nil {
