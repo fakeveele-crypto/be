@@ -1,16 +1,17 @@
 package middleware
 
 import (
+	"strings"
+
 	"github.com/gofiber/fiber/v2"
+	"latihan-fiber/tm7/helper"
 )
 
-// RequireJSON memastikan request header berisikan Content-Type: application/json
+// RequireJSON memastikan request yang membawa body berisikan Content-Type: application/json
 func RequireJSON(c *fiber.Ctx) error {
 	if c.Method() == fiber.MethodPost || c.Method() == fiber.MethodPut || c.Method() == fiber.MethodPatch {
-		if c.Get("Content-Type") != "application/json" {
-			return c.Status(fiber.StatusUnsupportedMediaType).JSON(fiber.Map{
-				"error": "Content-Type harus application/json",
-			})
+		if !strings.HasPrefix(c.Get(fiber.HeaderContentType), fiber.MIMEApplicationJSON) {
+			return helper.UnsupportedMediaType("Content-Type harus application/json")
 		}
 	}
 	return c.Next()

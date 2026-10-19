@@ -30,10 +30,7 @@ func SetupRoutes(
 		defer cancel()
 
 		if err := pool.Ping(ctx); err != nil {
-			return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{
-				"success": false,
-				"message": "database tidak dapat dihubungi",
-			})
+			return helper.ServiceUnavailable("database tidak dapat dihubungi")
 		}
 		return c.Status(fiber.StatusOK).JSON(fiber.Map{
 			"success": true,
@@ -66,4 +63,9 @@ func SetupRoutes(
 	usersGroup := api.Group("/users", middleware.RequireJSON, middleware.RequireAuth(jwtManager))
 	usersGroup.Get("/", middleware.RequirePermission(perms, "user:list"), userService.List)
 	usersGroup.Get("/:id", userService.Get)
+
+	// Harus paling akhir: hanya request yang tidak cocok dengan route mana pun yang sampai ke sini.
+	app.Use(func(c *fiber.Ctx) error {
+		return helper.NotFound("endpoint tidak ditemukan")
+	})
 }
