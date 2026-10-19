@@ -63,9 +63,11 @@ func ParseCursorQuery(c *fiber.Ctx) (model.CursorQuery, error) {
 	}
 
 	if raw := c.Query("is_active"); raw != "" {
-		if v, err := strconv.ParseBool(raw); err == nil {
-			q.IsActive = &v
+		v, err := strconv.ParseBool(raw)
+		if err != nil {
+			return model.CursorQuery{}, BadRequest("is_active harus berupa true atau false")
 		}
+		q.IsActive = &v
 	}
 
 	if raw := c.Query("cursor"); raw != "" {

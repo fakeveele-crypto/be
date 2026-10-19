@@ -22,6 +22,7 @@ const (
 	CodeNotAcceptable    = "NOT_ACCEPTABLE"
 	CodeTooManyRequests  = "TOO_MANY_REQUESTS"
 	CodeInternal         = "INTERNAL_ERROR"
+	CodeUnavailable      = "SERVICE_UNAVAILABLE"
 )
 
 // AppError adalah satu-satunya bentuk kegagalan yang dikenal aplikasi ini.
@@ -70,7 +71,7 @@ func Conflict(message string) *AppError {
 
 func Validation(fields map[string]string) *AppError {
 	return &AppError{
-		Status: fiber.StatusBadRequest, Code: CodeValidation,
+		Status: fiber.StatusUnprocessableEntity, Code: CodeValidation,
 		Message: "validasi gagal", Fields: fields,
 	}
 }
@@ -78,6 +79,24 @@ func Validation(fields map[string]string) *AppError {
 func NotAcceptable(message string) *AppError {
 	return &AppError{
 		Status: fiber.StatusNotAcceptable, Code: CodeNotAcceptable, Message: message,
+	}
+}
+
+func UnsupportedMediaType(message string) *AppError {
+	return &AppError{
+		Status: fiber.StatusUnsupportedMediaType, Code: CodeUnsupportedMedia, Message: message,
+	}
+}
+
+func TooManyRequests(message string) *AppError {
+	return &AppError{
+		Status: fiber.StatusTooManyRequests, Code: CodeTooManyRequests, Message: message,
+	}
+}
+
+func ServiceUnavailable(message string) *AppError {
+	return &AppError{
+		Status: fiber.StatusServiceUnavailable, Code: CodeUnavailable, Message: message,
 	}
 }
 
