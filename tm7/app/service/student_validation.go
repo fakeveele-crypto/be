@@ -1,57 +1,29 @@
 package service
 
-import (
-	"errors"
-	"strings"
+import "latihan-fiber/tm7/app/model"
 
-	"latihan-fiber/tm7/app/model"
-)
-
-// 1. Validasi untuk POST (Create)
-func ValidateCreateStudent(req model.Student) error {
-	if strings.TrimSpace(req.Nim) == "" {
-		return errors.New("NIM tidak boleh kosong")
+// ApplyPatchStudent menggabungkan field yang dikirim pada PATCH ke data
+// yang sudah ada. Pemeriksaan bentuk sudah dikerjakan tag sebelum fungsi
+// ini dipanggil, jadi tugasnya tinggal satu: menggabungkan.
+func ApplyPatchStudent(existing model.Student, patch model.PatchStudentRequest) model.Student {
+	if patch.NIM != nil {
+		existing.Nim = *patch.NIM
 	}
-	if strings.TrimSpace(req.Name) == "" {
-		return errors.New("nama tidak boleh kosong")
+	if patch.Name != nil {
+		existing.Name = *patch.Name
 	}
-	if req.Grade < 0 || req.Grade > 4.0 {
-		return errors.New("grade/IPK harus berada di rentang 0.0 - 4.0")
+	if patch.Grade != nil {
+		existing.Grade = *patch.Grade
 	}
-	return nil
+	if patch.IsActive != nil {
+		existing.IsActive = *patch.IsActive
+	}
+	return existing
 }
 
-// 2. Validasi untuk PUT (Update)
-func ValidateUpdateStudent(req model.Student) error {
-	if strings.TrimSpace(req.Nim) == "" {
-		return errors.New("NIM wajib diisi untuk pembaruan data")
-	}
-	if strings.TrimSpace(req.Name) == "" {
-		return errors.New("nama wajib diisi untuk pembaruan data")
-	}
-	if req.Grade < 0 || req.Grade > 4.0 {
-		return errors.New("grade/IPK harus berada di rentang 0.0 - 4.0")
-	}
-	return nil
-}
-
-// 3. Penerapan Perubahan untuk PATCH (Partial Update)
-func ApplyPatchStudent(existing model.Student, patch model.Student) (model.Student, error) {
-	updated := existing
-
-	if strings.TrimSpace(patch.Nim) != "" {
-		updated.Nim = patch.Nim
-	}
-	if strings.TrimSpace(patch.Name) != "" {
-		updated.Name = patch.Name
-	}
-	if patch.Grade >= 0 && patch.Grade <= 4.0 {
-		updated.Grade = patch.Grade
-	}
-
-	if err := ValidateUpdateStudent(updated); err != nil {
-		return existing, err
-	}
-
-	return updated, nil
+// IsEmptyPatchStudent memeriksa body PATCH yang tidak berisi field apa pun.
+// Aturan ini tidak dapat ditulis sebagai tag, karena ia menyangkut
+// hubungan antar field: setidaknya satu di antara mereka harus ada.
+func IsEmptyPatchStudent(req model.PatchStudentRequest) bool {
+	return req.NIM == nil && req.Name == nil && req.Grade == nil && req.IsActive == nil
 }

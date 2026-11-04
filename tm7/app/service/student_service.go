@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 	"strconv"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"latihan-fiber/tm7/app/model"
@@ -73,65 +74,129 @@ func (s *StudentService) GetStudentByID(c *fiber.Ctx) error {
 	return c.JSON(model.WebResponse{Success: true, Data: student})
 }
 
-// 3. CreateStudent 
-func (s *StudentService) CreateStudent(c *fiber.Ctx) error {
-	var req model.Student
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Format data tidak valid"})
+// translateStudentError mengubah error repository menjadi AppError.
+func translateStudentError(err error) error {
+	switch {
+	case errors.Is(err, repository.ErrNotFound):
+		return helper.NotFound("student tidak ditemukan")
+	case errors.Is(err, repository.ErrDuplicate):
+		return helper.Conflict("NIM sudah terdaftar")
+	default:
+		return helper.Internal(err)
 	}
-
-	current, _ := helper.CurrentUser(c)
-	req.OwnerID = current.UserID
-
-	student, err := s.repo.Create(c.UserContext(), req)
-	if err != nil {
-		if errors.Is(err, repository.ErrDuplicate) {
-			return c.Status(fiber.StatusConflict).JSON(fiber.Map{"error": err.Error()})
-		}
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
-	}
-
-	return c.Status(fiber.StatusCreated).JSON(model.WebResponse{Success: true,Data: student})
 }
 
-// 4. UpdateStudent 
+// 3. CreateStudent
+func (s *StudentService) CreateStudent(c *fiber.Ctx) error {
+	var req model.CreateStudentRequest
+	if err := c.BodyParser(&req); err != nil {
+		return helper.BadRequest("body harus berupa JSON yang valid")
+	}
+	req.NIM = strings.TrimSpace(req.NIM)
+	req.Name = strings.TrimSpace(req.Name)
+
+	if errs := helper.ValidateStruct(req); errs != nil {
+		return helper.Validation(errs)
+	}
+
+	current, ok := helper.CurrentUser(c)
+	if !ok {
+		return helper.Unauthorized("belum terautentikasi")
+	}
+
+	student, err := s.repo.Create(c.UserContext(), model.Student{
+		Nim: req.NIM, Name: req.Name, Grade: req.Grade,
+		IsActive: true, OwnerID: current.UserID,
+	})
+	if err != nil {
+		return translateStudentError(err)
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(model.WebResponse{Success: true, Data: student})
+}
+
+// 4. UpdateStudent (PUT: mengganti seluruh data)
 func (s *StudentService) UpdateStudent(c *fiber.Ctx) error {
 	id, err := c.ParamsInt("id")
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "ID tidak valid"})
+		return helper.BadRequest("id harus berupa angka")
 	}
 
-	var req model.Student
+	var req model.ReplaceStudentRequest
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Format data tidak valid"})
+		return helper.BadRequest("body harus berupa JSON yang valid")
 	}
-	req.ID = id
+	req.NIM = strings.TrimSpace(req.NIM)
+	req.Name = strings.TrimSpace(req.Name)
+
+	if errs := helper.ValidateStruct(req); errs != nil {
+		return helper.Validation(errs)
+	}
 
 	existing, err := s.repo.FindByID(c.UserContext(), id)
 	if err != nil {
-		if errors.Is(err, repository.ErrNotFound) {
-			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": err.Error()})
-		}
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+		return translateStudentError(err)
 	}
 
 	current, _ := helper.CurrentUser(c)
 	if !CanAccessStudent(current, existing.OwnerID, s.perms, "student:update:any") {
-		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "tidak berhak mengubah data ini"})
+		return helper.Forbidden("tidak berhak mengubah data ini")
 	}
 
-	student, err := s.repo.Update(c.UserContext(), req)
+	student, err := s.repo.Update(c.UserContext(), model.Student{
+		ID: id, Nim: req.NIM, Name: req.Name, Grade: req.Grade,
+		IsActive: req.IsActive, OwnerID: existing.OwnerID,
+	})
 	if err != nil {
-		if errors.Is(err, repository.ErrNotFound) {
-			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": err.Error()})
-		}
-		if errors.Is(err, repository.ErrDuplicate) {
-			return c.Status(fiber.StatusConflict).JSON(fiber.Map{"error": err.Error()})
-		}
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+		return translateStudentError(err)
 	}
 
-	return c.JSON(model.WebResponse{Success: true,Data: student})
+	return c.JSON(model.WebResponse{Success: true, Data: student})
+}
+
+// PatchStudent (PATCH: hanya mengubah field yang dikirim)
+func (s *StudentService) PatchStudent(c *fiber.Ctx) error {
+	id, err := c.ParamsInt("id")
+	if err != nil {
+		return helper.BadRequest("id harus berupa angka")
+	}
+
+	var req model.PatchStudentRequest
+	if err := c.BodyParser(&req); err != nil {
+		return helper.BadRequest("body harus berupa JSON yang valid")
+	}
+	if req.NIM != nil {
+		v := strings.TrimSpace(*req.NIM)
+		req.NIM = &v
+	}
+	if req.Name != nil {
+		v := strings.TrimSpace(*req.Name)
+		req.Name = &v
+	}
+
+	if IsEmptyPatchStudent(req) {
+		return helper.BadRequest("body PATCH harus memuat setidaknya satu field")
+	}
+	if errs := helper.ValidateStruct(req); errs != nil {
+		return helper.Validation(errs)
+	}
+
+	existing, err := s.repo.FindByID(c.UserContext(), id)
+	if err != nil {
+		return translateStudentError(err)
+	}
+
+	current, _ := helper.CurrentUser(c)
+	if !CanAccessStudent(current, existing.OwnerID, s.perms, "student:update:any") {
+		return helper.Forbidden("tidak berhak mengubah data ini")
+	}
+
+	student, err := s.repo.Update(c.UserContext(), ApplyPatchStudent(existing, req))
+	if err != nil {
+		return translateStudentError(err)
+	}
+
+	return c.JSON(model.WebResponse{Success: true, Data: student})
 }
 
 // 5. DeleteStudent 

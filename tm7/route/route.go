@@ -58,7 +58,7 @@ func SetupRoutes(
 	// pemeriksaannya dilakukan di dalam service, bukan di sini.
 	studentsGroup.Get("/:id", studentService.GetStudentByID)
 	studentsGroup.Put("/:id", studentService.UpdateStudent)
-	studentsGroup.Patch("/:id", studentService.UpdateStudent)
+	studentsGroup.Patch("/:id", studentService.PatchStudent)
 
 	usersGroup := api.Group("/users", middleware.RequireJSON, middleware.RequireAuth(jwtManager))
 	usersGroup.Get("/", middleware.RequirePermission(perms, "user:list"), userService.List)
