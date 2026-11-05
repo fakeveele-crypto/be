@@ -38,8 +38,8 @@ func newValidator() *validator.Validate {
 	_ = v.RegisterValidation("strongpassword", func(fl validator.FieldLevel) bool {
 		return passwordStrength(fl.Field().String()) == ""
 	})
-	
-		// NIM: tepat 9 digit angka, sesuai format NIM mahasiswa Vokasi UNAIR.
+
+	// NIM: tepat 9 digit angka, sesuai format NIM mahasiswa Vokasi UNAIR.
 	_ = v.RegisterValidation("nim", func(fl validator.FieldLevel) bool {
 		nim := fl.Field().String()
 		if len(nim) != 9 {
@@ -111,7 +111,7 @@ func messageFor(fe validator.FieldError) string {
 	case "oneof":
 		return "harus salah satu dari: " +
 			strings.ReplaceAll(fe.Param(), " ", ", ")
-		case "nim":
+	case "nim":
 		return "NIM harus berupa 9 digit angka"
 	case "gte":
 		return "nilai minimal " + fe.Param()

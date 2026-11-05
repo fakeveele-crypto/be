@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"latihan-fiber/tm7/config" 
+	"latihan-fiber/tm7/config"
 )
 
 func NewPool(ctx context.Context) (*pgxpool.Pool, error) {

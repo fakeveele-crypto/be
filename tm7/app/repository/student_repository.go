@@ -54,9 +54,9 @@ func (r *studentPostgresRepository) FindAll(ctx context.Context, search string, 
 		FROM students %s
 		ORDER BY id ASC 
 		LIMIT $%d OFFSET $%d`, where, len(args)+1, len(args)+2)
-	
+
 	args = append(args, limit, offset)
-	
+
 	rows, err := r.pool.Query(ctx, sqlText, args...)
 	if err != nil {
 		return nil, 0, fmt.Errorf("gagal mengambil data: %w", err)
@@ -94,7 +94,7 @@ func (r *studentPostgresRepository) Create(ctx context.Context, s model.Student)
 	err := r.pool.QueryRow(ctx, `
 		INSERT INTO students (nim, name, grade, is_active, owner_id) 
 		VALUES ($1, $2, $3, $4, $5) 
-		RETURNING id, created_at`, 
+		RETURNING id, created_at`,
 		s.Nim, s.Name, s.Grade, s.IsActive, s.OwnerID).
 		Scan(&s.ID, &s.CreatedAt)
 

@@ -4,7 +4,7 @@ import "time"
 
 type Student struct {
 	ID        int       `json:"id"`
-	Nim       string    `json:"nim"` 
+	Nim       string    `json:"nim"`
 	Name      string    `json:"name"`
 	Grade     float64   `json:"grade"`
 	IsActive  bool      `json:"is_active"`

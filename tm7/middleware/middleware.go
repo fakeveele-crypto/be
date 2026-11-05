@@ -14,7 +14,7 @@ func RequestLogger(logger *slog.Logger) fiber.Handler {
 		start := time.Now()
 		err := c.Next()
 		requestID, _ := c.Locals("requestid").(string)
-	
+
 		status := c.Response().StatusCode()
 		if err != nil {
 			var appErr *helper.AppError

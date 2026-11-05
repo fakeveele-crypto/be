@@ -35,7 +35,7 @@ func translateStudentError(err error) error {
 func (s *StudentService) GetStudents(c *fiber.Ctx) error {
 	ctx, cancel := helper.RequestContext(c)
 	defer cancel()
-	
+
 	format, err := helper.Negotiate(c, helper.FormatJSON, helper.FormatCSV)
 	if err != nil {
 		return err
@@ -120,9 +120,9 @@ func (s *StudentService) CreateStudent(c *fiber.Ctx) error {
 
 // 4. UpdateStudent (PUT: mengganti seluruh data)
 func (s *StudentService) UpdateStudent(c *fiber.Ctx) error {
-	id, err := c.ParamsInt("id")
-	if err != nil {
-		return helper.BadRequest("id harus berupa angka")
+	id, valid := helper.ParamID(c)
+	if !valid {
+		return helper.BadRequest("id harus berupa angka positif")
 	}
 
 	var req model.ReplaceStudentRequest

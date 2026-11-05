@@ -6,14 +6,14 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"latihan-fiber/tm7/app/repository"
 	"latihan-fiber/tm7/app/service"
 	"latihan-fiber/tm7/config"
 	"latihan-fiber/tm7/database"
 	"latihan-fiber/tm7/helper"
-	"latihan-fiber/tm7/route"
 	"latihan-fiber/tm7/middleware"
-	"github.com/gofiber/fiber/v2/middleware/requestid"
+	"latihan-fiber/tm7/route"
 )
 
 func main() {

@@ -32,9 +32,9 @@ func RequestContext(c *fiber.Ctx) (context.Context, context.CancelFunc) {
 
 func SuccessCursor(c *fiber.Ctx, message string, data any, meta *model.CursorMeta) error {
 	return c.Status(fiber.StatusOK).JSON(struct {
-		Success bool               `json:"success"`
-		Message string             `json:"message"`
-		Data    any                `json:"data"`
-		Meta    *model.CursorMeta  `json:"meta"`
+		Success bool              `json:"success"`
+		Message string            `json:"message"`
+		Data    any               `json:"data"`
+		Meta    *model.CursorMeta `json:"meta"`
 	}{true, message, data, meta})
 }
