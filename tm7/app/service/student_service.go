@@ -19,10 +19,27 @@ func NewStudentService(repo repository.StudentRepository, perms *helper.Permissi
 	return &StudentService{repo: repo, perms: perms}
 }
 
-// 1. GetStudents memakai cursor pagination.
+// translateStudentError mengubah error repository menjadi AppError.
+func translateStudentError(err error) error {
+	switch {
+	case errors.Is(err, repository.ErrNotFound):
+		return helper.NotFound("student tidak ditemukan")
+	case errors.Is(err, repository.ErrDuplicate):
+		return helper.Conflict("NIM sudah terdaftar")
+	default:
+		return helper.Internal(err)
+	}
+}
+
+// 1. GetStudents memakai cursor pagination dan melayani JSON maupun CSV.
 func (s *StudentService) GetStudents(c *fiber.Ctx) error {
 	ctx, cancel := helper.RequestContext(c)
 	defer cancel()
+	
+	format, err := helper.Negotiate(c, helper.FormatJSON, helper.FormatCSV)
+	if err != nil {
+		return err
+	}
 
 	q, err := helper.ParseCursorQuery(c)
 	if err != nil {
@@ -34,11 +51,13 @@ func (s *StudentService) GetStudents(c *fiber.Ctx) error {
 		return helper.Internal(err)
 	}
 
-	// Baris tambahan hasil limit+1 dipotong di sini. Ia hanya penanda bahwa
-	// masih ada halaman berikutnya, bukan bagian dari halaman ini.
 	hasMore := len(rows) > q.Limit
 	if hasMore {
 		rows = rows[:q.Limit]
+	}
+
+	if format == helper.FormatCSV {
+		return helper.WriteStudentsCSV(c, rows)
 	}
 
 	meta := &model.CursorMeta{Limit: q.Limit, HasMore: hasMore}
@@ -50,39 +69,24 @@ func (s *StudentService) GetStudents(c *fiber.Ctx) error {
 	return helper.SuccessCursor(c, "daftar student berhasil diambil", rows, meta)
 }
 
-// 2. GetStudentByID 
+// 2. GetStudentByID
 func (s *StudentService) GetStudentByID(c *fiber.Ctx) error {
-	id, err := c.ParamsInt("id")
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "ID tidak valid"})
+	id, valid := helper.ParamID(c)
+	if !valid {
+		return helper.BadRequest("id harus berupa angka positif")
 	}
 
 	student, err := s.repo.FindByID(c.UserContext(), id)
 	if err != nil {
-		if errors.Is(err, repository.ErrNotFound) {
-			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": err.Error()})
-		}
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+		return translateStudentError(err)
 	}
 
 	current, _ := helper.CurrentUser(c)
 	if !CanAccessStudent(current, student.OwnerID, s.perms, "student:read:any") {
-		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "tidak berhak mengakses data ini"})
+		return helper.Forbidden("tidak berhak mengakses data ini")
 	}
 
 	return c.JSON(model.WebResponse{Success: true, Data: student})
-}
-
-// translateStudentError mengubah error repository menjadi AppError.
-func translateStudentError(err error) error {
-	switch {
-	case errors.Is(err, repository.ErrNotFound):
-		return helper.NotFound("student tidak ditemukan")
-	case errors.Is(err, repository.ErrDuplicate):
-		return helper.Conflict("NIM sudah terdaftar")
-	default:
-		return helper.Internal(err)
-	}
 }
 
 // 3. CreateStudent
@@ -198,19 +202,15 @@ func (s *StudentService) PatchStudent(c *fiber.Ctx) error {
 	return c.JSON(model.WebResponse{Success: true, Data: student})
 }
 
-// 5. DeleteStudent 
+// 5. DeleteStudent
 func (s *StudentService) DeleteStudent(c *fiber.Ctx) error {
-	id, err := c.ParamsInt("id")
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "ID tidak valid"})
+	id, valid := helper.ParamID(c)
+	if !valid {
+		return helper.BadRequest("id harus berupa angka positif")
 	}
 
-	err = s.repo.Delete(c.UserContext(), id)
-	if err != nil {
-		if errors.Is(err, repository.ErrNotFound) {
-			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": err.Error()})
-		}
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	if err := s.repo.Delete(c.UserContext(), id); err != nil {
+		return translateStudentError(err)
 	}
 
 	return c.SendStatus(fiber.StatusNoContent)
