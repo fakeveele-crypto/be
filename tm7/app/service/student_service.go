@@ -2,7 +2,6 @@ package service
 
 import (
 	"errors"
-	"strconv"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -20,35 +19,35 @@ func NewStudentService(repo repository.StudentRepository, perms *helper.Permissi
 	return &StudentService{repo: repo, perms: perms}
 }
 
-// 1. GetStudents 
+// 1. GetStudents memakai cursor pagination.
 func (s *StudentService) GetStudents(c *fiber.Ctx) error {
-	search := c.Query("search")
-	page, _ := strconv.Atoi(c.Query("page", "1"))
-	if page < 1 {
-		page = 1
-	}
-	limit, _ := strconv.Atoi(c.Query("limit", "10"))
-	if limit < 1 {
-		limit = 10
-	}
+	ctx, cancel := helper.RequestContext(c)
+	defer cancel()
 
-	students, total, err := s.repo.FindAll(c.UserContext(), search, page, limit)
+	q, err := helper.ParseCursorQuery(c)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+		return err
 	}
 
-	totalPages := total / limit
-	if total%limit != 0 {
-		totalPages++
+	rows, err := s.repo.FindAfterCursor(ctx, q)
+	if err != nil {
+		return helper.Internal(err)
 	}
 
-	return c.JSON(model.WebResponse{
-		Success: true,
-		Data: students,
-		Meta: &model.Meta{
-			Search: search, Page: page, Limit: limit, Total: total, TotalPages: totalPages,
-		},
-	})
+	// Baris tambahan hasil limit+1 dipotong di sini. Ia hanya penanda bahwa
+	// masih ada halaman berikutnya, bukan bagian dari halaman ini.
+	hasMore := len(rows) > q.Limit
+	if hasMore {
+		rows = rows[:q.Limit]
+	}
+
+	meta := &model.CursorMeta{Limit: q.Limit, HasMore: hasMore}
+	if hasMore && len(rows) > 0 {
+		last := rows[len(rows)-1]
+		meta.NextCursor = helper.EncodeCursor(last.CreatedAt, last.ID)
+	}
+
+	return helper.SuccessCursor(c, "daftar student berhasil diambil", rows, meta)
 }
 
 // 2. GetStudentByID 
