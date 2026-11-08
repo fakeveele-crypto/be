@@ -1,0 +1,45 @@
+package config
+
+import (
+	"github.com/joho/godotenv"
+	"log"
+	"os"
+	"strconv"
+)
+
+func LoadEnv() {
+	if err := godotenv.Load(); err != nil {
+		log.Println("peringatan: berkas .env tidak ditemukan")
+	}
+}
+
+func GetEnv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok && value != "" {
+		return value
+	}
+	return fallback
+}
+
+func GetEnvInt(key string, fallback int) int {
+	value, ok := os.LookupEnv(key)
+	if !ok || value == "" {
+		return fallback
+	}
+	parsed, err := strconv.Atoi(value)
+	if err != nil {
+		return fallback
+	}
+	return parsed
+}
+
+func GetEnvFloat(key string, fallback float64) float64 {
+	value, ok := os.LookupEnv(key)
+	if !ok || value == "" {
+		return fallback
+	}
+	parsed, err := strconv.ParseFloat(value, 64)
+	if err != nil {
+		return fallback
+	}
+	return parsed
+}
